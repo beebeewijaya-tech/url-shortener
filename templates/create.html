@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block title %}Home{% endblock title %}
+
+{% block content %}
+    <main id="app" class="pt-10 pb-10">
+        {% raw %}
+            <div class="container">
+                <div class="flex items-start gap-5">
+                    <div class="create-wording">
+                        <h1>Paste the URL to be shortened</h1>
+                        <h3>Create short & memorable links in seconds</h3>
+                        <p>Transforming long, ugly links into nice, memorable and trackable short URLs. Use it to
+                            shorten
+                            links for any social media platforms, blogs, SMS, emails, ads, or pretty much anywhere else
+                            you
+                            want to share them. Twitter, Facebook, YouTube, Instagram, WhatsApp, emails, SMS, videos</p>
+                    </div>
+                    <div class="create-form">
+                        <div class="mb-6">
+                            <p class="primary-text"><strong>Title</strong></p>
+                            <input type="text" class="input" placeholder="Your title name for your link"
+                                   v-model="title">
+                        </div>
+                        <div class="mb-6">
+                            <p class="primary-text"><strong>Destination</strong></p>
+                            <input type="text" class="input" placeholder="https://www.example.com" v-model="url">
+                        </div>
+                        <div class="mb-6">
+                            <p class="primary-text"><strong>QR Image ( Optional )</strong></p>
+                            <input class="u-full-width input bg-grey hidden" type="file" id="file"
+                                   @change="changeFile" ref="file" accept="image/png, image/jpeg, image/svg">
+                            <input type="text" class="input pointer" @click="openFile"
+                                   :placeholder="filename || 'Select your file'" readonly>
+                        </div>
+                        <div class="mb-6 text-center">
+                            <a class="btn btn-primary btn-big" @click="submitForm">Create</a>
+                        </div>
+                        <p class="red-text text-center" v-if="errorMessage">{{ errorMessage }}</p>
+                    </div>
+                </div>
+            </div>
+        {% endraw %}
+    </main>
+{% endblock content %}
+
+{% block script %}
+    <script>
+        new Vue({
+            el: '#app',
+            data() {
+                return {
+                    file: "",
+                    filename: "",
+                    title: "",
+                    url: "",
+                    errorMessage: ""
+                }
+            },
+            methods: {
+                changeFile(e) {
+                    this.file = e.target.files
+                    this.filename = e.target.files[0].name
+                },
+                openFile() {
+                    this.$refs.file.click()
+                },
+                isValidURL() {
+                    const urlRegex = /^(https?|ftp):\/\/(www\.)?([^\s\/]+\.[^\s\/]+)|([^\s\/]+\.[^\s\/]+)$/i;
+                    return urlRegex.test(this.url);
+                },
+                async submitImage() {
+                    this.errorMessage = ""
+                    if (!this.file) {
+                        return ""
+                    }
+                    const formData = new FormData();
+                    formData.append("file", this.file[0]);
+
+                    try {
+                        this.submitting = true
+                        const {data} = await axios.post(`/image/create?url=${encodeURIComponent(this.url)}`, formData, {
+                            'Content-Type': 'multipart/form-data',
+                        })
+                        return data
+                    } catch (e) {
+                        console.error(e)
+                    } finally {
+                        this.submitting = false
+                    }
+                },
+                async submitForm() {
+                    this.errorMessage = ""
+                    if (!this.isValidURL()) {
+                        this.errorMessage = "Please enter a valid URL!"
+                        return
+                    }
+
+                    try {
+                        this.submitting = true
+                        const imageUrl = await this.submitImage()
+                        const {data} = await axios.post('/dashboard/create', {
+                            url: this.url,
+                            image_url: imageUrl,
+                            title: this.title
+                        })
+                        this.title = ""
+                        this.url = ""
+                        this.file = ""
+                        this.filename = ""
+                        window.location = "/dashboard/list"
+                    } catch (e) {
+                        console.error(e)
+                    } finally {
+                        this.submitting = false
+                    }
+                },
+            },
+            mounted() {
+            }
+        })
+    </script>
+{% endblock script %}

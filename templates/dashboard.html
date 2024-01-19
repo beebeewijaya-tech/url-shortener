@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock title %}
+
+{% block content %}
+    <main id="app" class="pt-3">
+        {% raw %}
+            <div class="navbar">
+                <div class="container">
+                    <img src="/static/short-swift-word.png" alt="">
+                </div>
+            </div>
+            <div class="flex gap-10">
+                <div class="sidebar">
+                    <h1>Links</h1>
+                    <div class="mb-5">
+                        <a class="btn btn-transparent btn-square btn-big flex" href="/">Home</a>
+                    </div>
+                    <div class="mb-5">
+                        <a class="btn btn-primary btn-square btn-big flex" href="/dashboard/list">Links</a>
+                    </div>
+                    <div class="mb-5">
+                        <a class="btn btn-transparent btn-square btn-big flex btn-disabled">Analytics</a>
+                    </div>
+                </div>
+                <div class="main-content">
+                    <div class="container mb-8">
+                        <div class="flex items-end justify-end">
+                            <div v-if="is_login">
+                                <a class="btn btn-square btn-ghost-primary btn-big ml-3" @click="logout">Logout</a>
+                            </div>
+                            <div v-else>
+                                <a class="btn btn-primary btn-square btn-big" href="/user/auth">Login</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="container mb-8">
+                        <div class="flex items-end justify-between">
+                            <div>
+                                <p>Search your URL</p>
+                                <input type="text" class="input" placeholder="https://www.example.com"
+                                       @keyup="search($event)">
+                            </div>
+                            <div>
+                                <a class="btn btn-primary btn-square btn-big" href="/dashboard/create">Create</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="container mb-8" v-if="list_url">
+                        <div class="list flex items-center justify-between mb-3" v-for="session, key in list_url"
+                             :key="key">
+                            <div>
+                                <h1>{{ session?.title || 'Empty Title' }}</h1>
+                                <p class="secondary-text pointer">{{ session?.short_url }}</p>
+                                <p class="grey-text">{{ session?.long_url }}</p>
+                            </div>
+                            <div>
+                                <div class=" mb-3">
+                                    <a class="btn btn-primary btn-square btn-big flex" @click="copy($event, session)">
+                                        <ion-icon name="copy-outline"></ion-icon>
+                                        <span class="ml-3">Copy</span></a>
+                                </div>
+                                <div>
+                                    <a class="btn btn-ghost-primary btn-square" @click="showQr(session)">
+                                        <ion-icon name="qr-code-outline"></ion-icon>
+                                    </a>
+                                    <a class="btn btn-ghost-primary btn-square" @click="deleteUrl(session)">
+                                        <ion-icon name="trash-outline"></ion-icon>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="popup" v-if="showPopUp">
+                <div class="cookiesContent" id="cookiesPopup">
+                    <div class="close" @click="close">
+                        <ion-icon name="close-outline"></ion-icon>
+                    </div>
+
+                    <img :src="qrUrl" alt="" v-if="qrUrl" class="qrcode-custom">
+                    <div id="qrcode" alt="cookies-img" v-else></div>
+
+                    <p v-if="selectedURL">{{ selectedURL }}</p>
+                </div>
+            </div>
+        {% endraw %}
+    </main>
+{% endblock content %}
+
+{% block script %}
+    <script>
+        new Vue({
+            el: '#app',
+            data() {
+                return {
+                    list_url: {{ list_url | tojson }} || null,
+                    qrUrl: '',
+                    showPopUp: false,
+                    selectedURL: '',
+                    do_spaces_url: {{ do_spaces_url | tojson }} || null,
+                    is_login: false
+                }
+            },
+            methods: {
+                copy(e, value) {
+                    e.target.innerText = "Copied!"
+                    navigator.clipboard.writeText(`https://${value.fields.short_url}`);
+
+                    setTimeout(() => {
+                        e.target.innerText = "Copy"
+                    }, 2000)
+                },
+                checkCookie(cname) {
+                    let name = cname + "=";
+                    let decodedCookie = decodeURIComponent(document.cookie);
+                    let ca = decodedCookie.split(';');
+                    for (let i = 0; i < ca.length; i++) {
+                        let c = ca[i];
+                        while (c.charAt(0) == ' ') {
+                            c = c.substring(1);
+                        }
+                        if (c.indexOf(name) == 0) {
+                            return c.substring(name.length, c.length);
+                        }
+                    }
+                    return "";
+                },
+                initCookies(cname, cvalue, exdays) {
+                    const d = new Date();
+                    d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
+                    let expires = "expires=" + d.toUTCString();
+                    document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+                },
+                eraseCookie(name) {
+                    document.cookie = name + "=" + 0 + ";path=/";
+                },
+                generateId(length) {
+                    let result = '';
+                    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+                    const charactersLength = characters.length;
+                    let counter = 0;
+                    while (counter < length) {
+                        result += characters.charAt(Math.floor(Math.random() * charactersLength));
+                        counter += 1;
+                    }
+                    return result;
+                },
+                showQr(value) {
+                    this.showPopUp = true
+                    setTimeout(() => {
+                        this.selectedURL = value?.short_url
+                        if (value?.image_url) {
+                            this.qrUrl = `${this.do_spaces_url}/${value?.image_url}`
+                        } else {
+                            new QRCode(document.getElementById("qrcode"), {
+                                text: `https://${this.selectedURL}`,
+                                width: 128,
+                                height: 128,
+                                colorDark: "#000000",
+                                colorLight: "#ffffff",
+                                correctLevel: QRCode.CorrectLevel.H
+                            });
+                        }
+                    }, 500)
+                },
+                close() {
+                    this.showPopUp = false
+                    this.selectedURL = ""
+                    this.qrUrl = ""
+                },
+                search(e) {
+                    const value = e.target.value
+                    if (!value) {
+                        this.list_url = {{ list_url | tojson }} || null
+                        return
+                    }
+                    this.list_url = this.list_url.filter((e) => e?.long_url.includes(value))
+                },
+                async deleteUrl(value) {
+                    try {
+                        this.list_url = this.list_url.filter((e) => e.id !== value?.id)
+                        await axios.delete(`/dashboard/delete/${value?.id}`)
+                    } catch (e) {
+                        console.error(e)
+                    } finally {
+                        this.submitting = false
+                    }
+                },
+                logout() {
+                    const cookieLogin = "u-auth"
+                    this.eraseCookie(cookieLogin)
+                    window.location = "/"
+                }
+            },
+            mounted() {
+                const cookieName = "u_session"
+                const cookieLogin = "u-auth"
+                if (!this.checkCookie(cookieName)) {
+                    this.initCookies(cookieName, this.generateId(10), 30)
+                }
+
+                if (this.checkCookie(cookieLogin)) {
+                    this.is_login = true
+                }
+            }
+        })
+    </script>
+{% endblock script %}

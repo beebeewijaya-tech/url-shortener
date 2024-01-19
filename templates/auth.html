@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block title %}Auth{% endblock title %}
+
+{% block content %}
+    <main id="app" class="pt-10 pb-10">
+        {% raw %}
+            <div class="container">
+                <div class="flex items-start gap-5">
+                    <div class="create-wording">
+                        <h1>{{ isLogin ? 'Login' : 'Register' }}</h1>
+                        <div v-if="isLogin">
+                            <h3>Please enter your credentials below to access your account.</h3>
+                            <p>Kindly input your login details in the designated fields to gain access to your
+                                account.</p>
+                        </div>
+                        <div v-else>
+                            <h3>To create your account, kindly provide the necessary information in the designated
+                                fields below.</h3>
+                            <p> Once completed, you'll be all set to embark on your journey with us!</p>
+                        </div>
+                    </div>
+                    <div class="create-form">
+                        <div class="mb-6">
+                            <p class="primary-text"><strong>Email</strong></p>
+                            <input type="text" class="input" placeholder="your@email.com"
+                                   v-model="email">
+                        </div>
+                        <div class="mb-6">
+                            <p class="primary-text"><strong>Password</strong></p>
+                            <input type="password" class="input" placeholder="Your password" v-model="password">
+                        </div>
+                        <div class="mb-6">
+                            <p class="secondary-text pointer" @click="switching">
+                                {{ isLogin ? "You don't have an account? Click here" :
+                                "You have an account? Click here" }}</p>
+                        </div>
+                        <div class="mb-6 text-center" v-if="submitting">
+                            <span class="loader"></span>
+                        </div>
+                        <div class="mb-6 text-center" v-else>
+                            <a class="btn btn-primary btn-big" @click="submitForm" :disabled="submitting">{{ isLogin ?
+                                'Login' : 'Register' }}</a>
+                        </div>
+                        <p class="red-text text-center" v-if="errorMessage">{{ errorMessage }}</p>
+                    </div>
+                </div>
+            </div>
+        {% endraw %}
+    </main>
+{% endblock content %}
+
+{% block script %}
+    <script>
+        new Vue({
+            el: '#app',
+            data() {
+                return {
+                    email: "",
+                    password: "",
+                    errorMessage: "",
+                    submitting: false,
+                    isLogin: true
+                }
+            },
+            methods: {
+                isValidEmail(email) {
+                    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+                    return emailRegex.test(email);
+                },
+                async submitForm() {
+                    if (this.isLogin) {
+                        await this.login()
+                    } else {
+                        await this.register()
+                    }
+                },
+                async login() {
+                    this.errorMessage = ""
+                    if (!this.isValidEmail(this.email)) {
+                        this.errorMessage = "Enter a valid email!"
+                        return
+                    }
+
+                    if (this.password.length < 6) {
+                        this.errorMessage = "Password requires 6 chars"
+                        return
+                    }
+
+                    try {
+                        this.submitting = true
+                        const {data} = await axios.post('/user/login', {
+                            email: this.email,
+                            password: this.password
+                        })
+                        this.initCookies("u-auth", "Bearer " + data.token, 1)
+                        window.location = "/dashboard/list"
+                    } catch (e) {
+                        console.error(e)
+                        this.errorMessage = e.response.data.message
+                    } finally {
+                        this.submitting = false
+                    }
+                },
+                async register() {
+                    this.errorMessage = ""
+                    if (!this.isValidEmail(this.email)) {
+                        this.errorMessage = "Enter a valid email!"
+                        return
+                    }
+
+                    if (this.password.length < 6) {
+                        this.errorMessage = "Password requires 6 chars"
+                        return
+                    }
+
+                    try {
+                        this.submitting = true
+                        const {data} = await axios.post('/user/register', {
+                            email: this.email,
+                            password: this.password
+                        })
+                        this.isLogin = true
+                        this.email = ""
+                        this.password = ""
+                    } catch (e) {
+                        this.errorMessage = e.response.data.message
+                    } finally {
+                        this.submitting = false
+                    }
+                },
+                switching() {
+                    this.isLogin = !this.isLogin
+                },
+                initCookies(cname, cvalue, exdays) {
+                    const d = new Date();
+                    d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
+                    let expires = "expires=" + d.toUTCString();
+                    document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+                },
+            },
+            mounted() {
+            }
+        })
+    </script>
+{% endblock script %}

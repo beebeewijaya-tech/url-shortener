@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}Home{% endblock title %}
+
+{% block content %}
+    <main id="app" class="pt-3">
+        {% raw %}
+            <div class="navbar">
+                <div class="container">
+                    <img src="/static/short-swift-word.png" alt="">
+                </div>
+            </div>
+            <div class="container mb-8">
+                <div class="main-header">
+                    <img src="/static/Illustration.png" alt="">
+
+                    <h1 class="mb-10"> Transform <span class="secondary-text">Long URLs</span> into Click-Worthy
+                        Masterpieces with Our
+                        URL
+                        Shortener Application in
+                        minutes!</h1>
+
+                    <a class="btn btn-primary" href="/user/auth">Get Started For Free</a>
+                </div>
+            </div>
+            <!--
+                <div class="pricing pt-5 pb-8">
+                <div class="container">
+                    <div class="flex items-center justify-center">
+                        <div class="pricing-section free-section">
+                            <h1 class="title">Free</h1>
+                            <hr>
+                            <h1 class="price">0$ / Month</h1>
+                            <div class="benefit">
+                                <p>2 QR Codes/month</p>
+                                <p>10 links/month</p>
+                            </div>
+                            <div class="includes">
+                                <a class="btn btn-primary mb-4 mt-4" href="/user/auth">Get Started</a>
+                                <h3>Includes</h3>
+                                <ul>
+                                    <li>PNG & JPEG QR Code download formats</li>
+                                    <li>QR Code customizations</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="pricing-section core-section">
+                            <h1 class="title">Core</h1>
+                            <hr>
+                            <h1 class="price secondary-text">5$ / Month</h1>
+                            <div class="benefit">
+                                <p>30 QR Codes/month</p>
+                                <p>70 links/month</p>
+                            </div>
+                            <div class="includes">
+                                <a class="btn btn-primary mb-4 mt-4" href="/user/auth">Get Started</a>
+                                <h3>Includes</h3>
+                                <ul>
+                                    <li>Analytics</li>
+                                    <li>PNG & JPEG QR Code download formats</li>
+                                    <li>QR Code customizations</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="pricing-section growth-section">
+                            <h1 class="title">Growth</h1>
+                            <hr>
+                            <h1 class="price">10$ / Month</h1>
+                            <div class="benefit">
+                                <p>50 QR Codes/month</p>
+                                <p>100 links/month</p>
+                            </div>
+                            <div class="includes">
+                                <a class="btn btn-primary mb-4 mt-4" href="/user/auth">Get Started</a>
+                                <h3>Includes</h3>
+                                <ul>
+                                    <li>Analytics</li>
+                                    <li>PNG & JPEG QR Code download formats</li>
+                                    <li>QR Code customizations</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="pb-10"></div>
+            </div>
+            -->
+            <div class="footer flex items-center justify-center">
+                <div>
+                    <img src="/static/powered-by-ss.png" alt="">
+                    <p>Shortswift @ Copyright 2024</p>
+                </div>
+            </div>
+        {% endraw %}
+    </main>
+{% endblock content %}
+
+{% block script %}
+    <script>
+        new Vue({
+            el: '#app',
+            data() {
+                return {}
+            },
+            methods: {},
+            mounted() {
+            }
+        })
+    </script>
+{% endblock script %}
